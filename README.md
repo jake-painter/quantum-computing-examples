@@ -63,7 +63,3 @@ This project is a work in progress. More notebooks will be added covering topics
 - **Qiskit Aer** — High-performance simulators (QASM, Statevector)
 - **Matplotlib** — Histograms and Bloch sphere plots
 - **Google Colab** — Zero-setup notebook environment
-
-## License
-
-MIT
