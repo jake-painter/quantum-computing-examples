@@ -10,11 +10,11 @@ Now we introduce **entanglement**: linking two qubits so tightly that measuring 
 3. What the four **Bell states** are and why they matter
 4. How to verify entanglement through measurement correlations
 5. Why individual qubits in an entangled pair look completely random on their own
-# Install dependencies (Colab)
+# Install the core Qiskit SDK and the Aer simulator package
 !pip install qiskit qiskit-aer
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.visualization import plot_histogram, plot_bloch_multivector, array_to_latex
-from qiskit.quantum_info import Statevector, partial_trace
+from qiskit import *
+from qiskit.visualization import plot_histogram, array_to_latex, plot_bloch_multivector
+from qiskit.quantum_info import partial_trace
 from qiskit_aer import Aer
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,20 +37,26 @@ The **CNOT (Controlled-NOT)** gate takes two qubits:
 
 On its own with classical inputs (|0⟩ or |1⟩), CNOT is just a reversible XOR. The magic happens when the control qubit is in **superposition**.
 # === CNOT with a classical control: no entanglement ===
-# Control = |0⟩, Target = |0⟩ → nothing happens
+# Control = |0>, Target = |0> -> nothing happens
 cnot_demo_0 = QuantumCircuit(2)
 cnot_demo_0.cx(0, 1)  # CNOT: qubit 0 controls qubit 1
 
-sv_0 = Statevector.from_instruction(cnot_demo_0)
-print("Control=|0⟩, Target=|0⟩ → Output:")
+# Run on statevector simulator to see the exact output state
+sv_sim = Aer.get_backend('statevector_simulator')
+result_0 = sv_sim.run(cnot_demo_0).result()
+sv_0 = result_0.get_statevector()
+
+print("Control=|0>, Target=|0> -> Output:")
 array_to_latex(sv_0)
-# Control = |1⟩, Target = |0⟩ → target flips to |1⟩
+# === CNOT with control = |1>: target flips ===
 cnot_demo_1 = QuantumCircuit(2)
-cnot_demo_1.x(0)      # Flip control to |1⟩
+cnot_demo_1.x(0)      # Flip control to |1>
 cnot_demo_1.cx(0, 1)  # Now CNOT fires: target flips
 
-sv_1 = Statevector.from_instruction(cnot_demo_1)
-print("Control=|1⟩, Target=|0⟩ → Output:")
+result_1 = sv_sim.run(cnot_demo_1).result()
+sv_1 = result_1.get_statevector()
+
+print("Control=|1>, Target=|0> -> Output:")
 array_to_latex(sv_1)
 So far, nothing quantum. The CNOT just acts like a classical conditional flip.
 
@@ -71,7 +77,7 @@ Here's the key insight: because the control is in superposition, the CNOT create
 Result: **(|00⟩ + |11⟩) / √2** — the qubits are now **entangled**.
 
 This means if you measure one and get 0, the other is *guaranteed* to be 0. Measure 1, the other is 1. Always. No exceptions.
-# === Build the Bell state |Φ+⟩ ===
+# === Build the Bell state |Phi+> ===
 bell_circuit = QuantumCircuit(2)
 
 bell_circuit.h(0)      # Step 1: Superposition on qubit 0
@@ -80,14 +86,20 @@ bell_circuit.cx(0, 1)  # Step 2: CNOT entangles qubit 0 and qubit 1
 print("Bell State Circuit:")
 print(bell_circuit.draw())
 # === Inspect the statevector ===
-# Expect: [1/√2, 0, 0, 1/√2] → (|00⟩ + |11⟩) / √2
-# The four positions represent |00⟩, |01⟩, |10⟩, |11⟩
-# Only |00⟩ and |11⟩ have nonzero amplitudes — that's entanglement.
+# The statevector simulator returns the exact quantum state as a
+# complex vector -- no randomness, no collapse.
+# Expect: [1/sqrt(2), 0, 0, 1/sqrt(2)] -> (|00> + |11>) / sqrt(2)
+# The four positions represent |00>, |01>, |10>, |11>
+# Only |00> and |11> have nonzero amplitudes -- that's entanglement.
 
-bell_sv = Statevector.from_instruction(bell_circuit)
-print("Statevector of |Φ+⟩:")
+result_bell = sv_sim.run(bell_circuit).result()
+bell_sv = result_bell.get_statevector()
+
+print("Statevector of |Phi+>:")
 array_to_latex(bell_sv)
 # === Prove it with measurement: 102,400 shots ===
+# The QASM simulator mimics a real quantum computer: it runs the circuit
+# many times ("shots") and tallies how often each outcome occurs.
 bell_measured = QuantumCircuit(2, 2)
 bell_measured.h(0)
 bell_measured.cx(0, 1)
@@ -98,9 +110,8 @@ result = qasm_sim.run(bell_measured, shots=102400).result()
 counts = result.get_counts()
 
 print("Measurement results:", counts)
-print()
-print("Notice: ONLY '00' and '11' appear.")
-print("You will NEVER see '01' or '10'. That's entanglement.")
+# Expect ONLY '00' and '11'. You will NEVER see '01' or '10'.
+# That's entanglement.
 plot_histogram(counts)
 ### What just happened?
 
@@ -115,11 +126,10 @@ Here's something that trips people up: if we look at each qubit *individually* i
 On the Bloch sphere, each qubit's arrow collapses to the **center of the sphere** (the origin), meaning it has no definite direction at all.
 
 This is fundamentally different from superposition, where the arrow pointed cleanly along +X. The information isn't *in* either qubit — it's in the **relationship between them**.
-# === Bloch sphere of the full 2-qubit entangled state ===
-# Each qubit's individual arrow → center of sphere (mixed state)
-print("Bloch spheres for each qubit in the entangled pair:")
-print("Both arrows point to the CENTER — neither qubit has a definite state on its own.")
-print()
+# === Bloch Sphere Visualization ===
+# Compare to notebook 01 where the arrow pointed along +X.
+# Here both arrows point to the CENTER of the sphere.
+# Neither qubit has a definite state on its own.
 plot_bloch_multivector(bell_sv)
 # === Proof: trace out one qubit, look at the other ===
 # "Partial trace" is the math operation that says:
@@ -134,7 +144,7 @@ print()
 print("Density matrix of qubit 1 alone:")
 print(np.array(rho_qubit1))
 print()
-print("Both are [[0.5, 0], [0, 0.5]] — the maximally mixed state.")
+print("Both are [[0.5, 0], [0, 0.5]] -- the maximally mixed state.")
 print("A fair coin. No information. The quantum info lives in the CORRELATION.")
 ### Superposition vs Entanglement — Key Difference
 
@@ -162,6 +172,7 @@ All four are equally entangled. The differences are in which outcomes are correl
 - **Ψ states**: qubits disagree (01 or 10)
 - **+ states**: positive phase between terms
 - **- states**: negative phase (invisible to simple measurement, but critical for algorithms)
+# === Helper function to build any Bell state ===
 def make_bell_state(name):
     """Build any of the four Bell state circuits."""
     qc = QuantumCircuit(2)
@@ -169,39 +180,37 @@ def make_bell_state(name):
     qc.cx(0, 1)
 
     if name == 'phi_minus':
-        qc.z(0)            # Phase flip: + → -
+        qc.z(0)            # Phase flip: + -> -
     elif name == 'psi_plus':
-        qc.x(1)            # Bit flip: 00↔01, 11↔10
+        qc.x(1)            # Bit flip: 00<->01, 11<->10
     elif name == 'psi_minus':
         qc.x(1)            # Bit flip
         qc.z(0)            # Phase flip
-    # 'phi_plus' is the default — no extra gates needed
+    # 'phi_plus' is the default -- no extra gates needed
 
     return qc
-
-
+# === Inspect all four Bell states with the statevector simulator ===
 bell_states = {
-    '|Φ+⟩': 'phi_plus',
-    '|Φ-⟩': 'phi_minus',
-    '|Ψ+⟩': 'psi_plus',
-    '|Ψ-⟩': 'psi_minus'
+    '|Phi+>': 'phi_plus',
+    '|Phi->': 'phi_minus',
+    '|Psi+>': 'psi_plus',
+    '|Psi->': 'psi_minus'
 }
 
 print("=" * 50)
 for label, name in bell_states.items():
     qc = make_bell_state(name)
-    sv = Statevector.from_instruction(qc)
+    result_sv = sv_sim.run(qc).result()
+    sv = result_sv.get_statevector()
     amplitudes = np.array(sv)
 
-    print(f"{label}  →  {amplitudes.round(4)}")
+    print(f"{label}  ->  {amplitudes.round(4)}")
     print(f"   Circuit: {qc.draw(output='text', fold=-1)}")
     print()
-# === Measure all four Bell states — visualize side by side ===
+# === Measure all four Bell states -- visualize side by side ===
 fig, axes = plt.subplots(2, 2, figsize=(14, 8))
 fig.suptitle('Measurement Outcomes: All Four Bell States (102,400 shots each)',
              fontsize=14, fontweight='bold')
-
-qasm_sim = Aer.get_backend('qasm_simulator')
 
 for idx, (label, name) in enumerate(bell_states.items()):
     qc = make_bell_state(name)
@@ -249,17 +258,18 @@ Let's measure our Bell state in the X basis (Hadamard before measurement) and co
 bell_z = QuantumCircuit(2, 2)
 bell_z.h(0)
 bell_z.cx(0, 1)
-# Measure directly in Z basis
 bell_z.measure([0, 1], [0, 1])
 
 result_z = qasm_sim.run(bell_z, shots=102400).result()
 counts_z = result_z.get_counts()
 
+print("Z-basis results:", counts_z)
+plot_histogram(counts_z)
 # === X-basis measurement ===
+# Rotate to X basis before measuring (H converts X-basis to Z-basis)
 bell_x = QuantumCircuit(2, 2)
 bell_x.h(0)
 bell_x.cx(0, 1)
-# Rotate to X basis before measuring (H converts X-basis to Z-basis)
 bell_x.h(0)
 bell_x.h(1)
 bell_x.measure([0, 1], [0, 1])
@@ -267,8 +277,12 @@ bell_x.measure([0, 1], [0, 1])
 result_x = qasm_sim.run(bell_x, shots=102400).result()
 counts_x = result_x.get_counts()
 
+print("X-basis results:", counts_x)
+plot_histogram(counts_x)
+# === Side-by-side comparison ===
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-fig.suptitle('|Φ+⟩ measured in two different bases', fontsize=14, fontweight='bold')
+fig.suptitle('|Phi+> measured in two different bases',
+             fontsize=14, fontweight='bold')
 
 plot_histogram(counts_z, ax=ax1, title='Z-basis (standard)')
 plot_histogram(counts_x, ax=ax2, title='X-basis (Hadamard first)')
@@ -276,9 +290,6 @@ plot_histogram(counts_x, ax=ax2, title='X-basis (Hadamard first)')
 plt.tight_layout()
 plt.show()
 
-print("Z-basis:", counts_z)
-print("X-basis:", counts_x)
-print()
 print("Correlations persist in BOTH bases.")
 print("A classical fake could match one basis but not both.")
 The |Φ+⟩ state shows correlated outcomes (only `00` and `11`) in **both** the Z and X bases. A classical system that was pre-programmed to always output matching results could reproduce the Z-basis data, but it would fail in the X-basis — it would produce all four outcomes equally.
