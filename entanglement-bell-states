@@ -1,4 +1,3 @@
-Sure thing. Let me walk through the whole notebook section by section, covering both the physics and the code logic.
 Section 0 — Setup
 Straightforward imports. The key tools from qiskit.quantum_info are what make this notebook tick: Statevector lets you inspect the exact mathematical state without measurement noise, partial_trace lets you mathematically "ignore" one qubit to see what the other looks like on its own, and entropy computes the von Neumann entropy which is the formal measure of entanglement. AerSimulator is the QASM shot-based simulator you're already familiar with from the superposition notebook.
 Section 1 — Product States vs Entangled States
