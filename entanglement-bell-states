@@ -1,1 +1,146 @@
+Sure thing. Let me walk through the whole notebook section by section, covering both the physics and the code logic.
+Section 0 — Setup
+Straightforward imports. The key tools from qiskit.quantum_info are what make this notebook tick: Statevector lets you inspect the exact mathematical state without measurement noise, partial_trace lets you mathematically "ignore" one qubit to see what the other looks like on its own, and entropy computes the von Neumann entropy which is the formal measure of entanglement. AerSimulator is the QASM shot-based simulator you're already familiar with from the superposition notebook.
+Section 1 — Product States vs Entangled States
+This is the conceptual foundation everything else builds on. The notebook constructs two two-qubit states and compares them.
+The product state applies a Hadamard to qubit 0 only, leaving qubit 1 untouched. The result is ∣+⟩⊗∣0⟩|+\rangle \otimes |0\rangle
+∣+⟩⊗∣0⟩, which expands to 12∣00⟩+12∣10⟩\frac{1}{\sqrt{2}}|00\rangle + \frac{1}{\sqrt{2}}|10\rangle
+2​1​∣00⟩+2​1​∣10⟩. All four amplitudes in the two-qubit state vector can be derived by multiplying the individual qubit amplitudes together. That's the defining property of a product state — the qubits are independent. Knowing qubit 0's state tells you nothing new about qubit 1.
 
+The Bell state adds one gate: a CNOT after the Hadamard. The result is 12∣00⟩+12∣11⟩\frac{1}{\sqrt{2}}|00\rangle + \frac{1}{\sqrt{2}}|11\rangle
+2​1​∣00⟩+2​1​∣11⟩. This can't be factored. There's no pair of single-qubit states you can tensor together to produce those specific amplitudes (only ∣00⟩|00\rangle
+∣00⟩ and ∣11⟩|11\rangle
+∣11⟩ populated, with ∣01⟩|01\rangle
+∣01⟩ and ∣10⟩|10\rangle
+∣10⟩ at zero). The qubits are no longer independent — that's entanglement.
+
+Section 2 — The Bell State Circuit
+The circuit is two gates total, which is part of what makes it so striking. The Hadamard puts qubit 0 into equal superposition: ∣0⟩→12(∣0⟩+∣1⟩)|0\rangle \rightarrow \frac{1}{\sqrt{2}}(|0\rangle + |1\rangle)
+∣0⟩→2​1​(∣0⟩+∣1⟩). At this point the two-qubit system is 12(∣0⟩+∣1⟩)⊗∣0⟩=12∣00⟩+12∣10⟩\frac{1}{\sqrt{2}}(|0\rangle + |1\rangle) \otimes |0\rangle = \frac{1}{\sqrt{2}}|00\rangle + \frac{1}{\sqrt{2}}|10\rangle
+2​1​(∣0⟩+∣1⟩)⊗∣0⟩=2​1​∣00⟩+2​1​∣10⟩. Still a product state.
+
+The CNOT then acts conditionally: it flips qubit 1 if and only if qubit 0 is ∣1⟩|1\rangle
+∣1⟩. Since qubit 0 is in superposition, the CNOT effectively says "in the branch where qubit 0 is 0, leave qubit 1 alone; in the branch where qubit 0 is 1, flip qubit 1." The result: 12∣00⟩+12∣11⟩\frac{1}{\sqrt{2}}|00\rangle + \frac{1}{\sqrt{2}}|11\rangle
+2​1​∣00⟩+2​1​∣11⟩. The two qubits are now linked by a conditional relationship that exists across both branches of the superposition simultaneously. That conditionality-across-superposition is exactly what creates entanglement.
+
+The truth table in the notebook shows CNOT's action on all four computational basis states, which is useful reference, but the key insight is what happens when the control qubit isn't in a definite state.
+Section 3 — Statevector Verification
+This section does two things: confirms the amplitudes, then mathematically proves entanglement using entropy.
+The partial trace is the critical concept. In a two-qubit system, if you want to describe just qubit 0 by itself, you need to mathematically "trace out" (sum over all possibilities of) qubit 1. For a product state, this gives you back a clean pure state. For an entangled state, it gives you a mixed state — a statistical mixture, not a superposition.
+The reduced density matrix of qubit 0 in the Bell state comes out as 12∣0⟩⟨0∣+12∣1⟩⟨1∣\frac{1}{2}|0\rangle\langle 0| + \frac{1}{2}|1\rangle\langle 1|
+21​∣0⟩⟨0∣+21​∣1⟩⟨1∣. That's the maximally mixed state — a 50/50 classical coin flip. Qubit 0, viewed in isolation, looks completely random. It has no preferred direction, no coherence, nothing. All of its "quantumness" is tied up in its relationship with qubit 1.
+
+The **von Neumann entropy** quantifies this. For a pure state, entropy is 0. For the maximally mixed single-qubit state, entropy is 1 bit. That's the maximum possible for a two-qubit system, so ∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩ is *maximally* entangled.
+
+The contrast with the product state is the real teaching moment. The product state ∣+⟩∣0⟩|+\rangle|0\rangle
+∣+⟩∣0⟩ also has qubit 0 in superposition, but its entropy is 0 after partial trace. Why? Because ∣+⟩|+\rangle
+∣+⟩ is a *pure* state — it's a definite quantum state pointing along the +X axis of the Bloch sphere. Superposition doesn't mean uncertainty about the state; it means the state itself is a combination of basis vectors. When you trace out qubit 1, qubit 0 is still cleanly described as ∣+⟩|+\rangle
+∣+⟩. No information is lost because no information was shared between the qubits.
+
+This distinction between superposition and entanglement is one of the most common points of confusion in quantum computing, and the entropy comparison makes it concrete.
+Section 4 — QASM Verification
+This shifts from mathematical proof to empirical evidence. Running 4096 shots through the simulator produces a histogram showing only ∣00⟩|00\rangle
+∣00⟩ and ∣11⟩|11\rangle
+∣11⟩ outcomes, roughly 50/50. The key observation: each individual measurement is random (you can't predict whether you'll get 0 or 1), but the two qubits always agree. That "random but correlated" behavior is the empirical signature of entanglement.
+
+Section 5 — All Four Bell States
+The four Bell states are the complete set of maximally entangled two-qubit states. They form an orthonormal basis, meaning any two-qubit state can be decomposed into a combination of these four.
+The make_bell_state() function constructs each one with minor gate variations:
+
+∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩: H + CNOT (the basic recipe). Produces ∣00⟩+∣11⟩|00\rangle + |11\rangle
+∣00⟩+∣11⟩. Correlated, same phase.
+
+∣Φ−⟩|\Phi^-\rangle
+∣Φ−⟩: H + CNOT + Z on qubit 0. The Z gate flips the phase of ∣1⟩|1\rangle
+∣1⟩, turning the ∣11⟩|11\rangle
+∣11⟩ component negative: ∣00⟩−∣11⟩|00\rangle - |11\rangle
+∣00⟩−∣11⟩. Still correlated, but with a relative phase difference.
+
+**∣Ψ+⟩|\Psi^+\rangle
+∣Ψ+⟩**: H + CNOT + X on qubit 1. The X gate flips qubit 1, turning ∣00⟩→∣01⟩|00\rangle \rightarrow |01\rangle
+∣00⟩→∣01⟩ and ∣11⟩→∣10⟩|11\rangle \rightarrow |10\rangle
+∣11⟩→∣10⟩. Now the qubits are *anti-correlated*: ∣01⟩+∣10⟩|01\rangle + |10\rangle
+∣01⟩+∣10⟩.
+
+∣Ψ−⟩|\Psi^-\rangle
+∣Ψ−⟩: X on qubit 0 first, then H + CNOT. This produces ∣01⟩−∣10⟩|01\rangle - |10\rangle
+∣01⟩−∣10⟩. Anti-correlated with opposite phase. This is actually the singlet state from physics — the one that shows up in the EPR paradox discussion.
+
+
+All four have identical entanglement entropy (1 bit). The differences between them are in *which* outcomes appear (correlated vs anti-correlated) and the relative phase between the two terms (+ vs -). The phase difference isn't visible in Z-basis measurements — both ∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩ and ∣Φ−⟩|\Phi^-\rangle
+∣Φ−⟩ give the same histogram of ∣00⟩|00\rangle
+∣00⟩ and ∣11⟩|11\rangle
+∣11⟩. You'd need to measure in a different basis to distinguish them, which ties into the next sections.
+
+Section 6 — Bloch Sphere Breakdown
+This is one of the most visually striking sections. In your superposition notebook, the Bloch sphere was the go-to visualization: every single-qubit pure state maps to a unique point on the surface of the sphere.
+For the product state, you see qubit 0 at the +X equator (that's ∣+⟩|+\rangle
+∣+⟩) and qubit 1 at the north pole (that's ∣0⟩|0\rangle
+∣0⟩). Clean, informative, exactly what you'd expect.
+
+For the Bell state, both vectors collapse to the dead center of the sphere — the origin. This looks like the qubits are in no state at all, but that's not what's happening. Each qubit's reduced state is the maximally mixed state 12I\frac{1}{2}I
+21​I, which has no preferred direction. The Bloch sphere can only represent single-qubit states, and for an entangled qubit, the single-qubit description is genuinely incomplete. The information about the system exists entirely in the correlations between the two qubits, which lives in a 4-dimensional Hilbert space that the 3D Bloch sphere can't capture.
+
+This is a good conceptual anchor: the Bloch sphere's failure mode tells you exactly where the entanglement "lives" — not in either qubit, but in the space between them.
+Section 7 — Shot-by-Shot Correlations
+This section makes entanglement visceral by printing individual measurement outcomes from 20 shots with memory=True. Instead of aggregate statistics, you see each shot: qubit 0 got 0 and qubit 1 got 0, qubit 0 got 1 and qubit 1 got 1, etc. Every single row matches. The match rate is 20/20 (or whatever the shot count is).
+The code handles Qiskit's bit ordering convention, which stores the most significant bit first in the outcome string. So for a 2-qubit outcome string like '01', the left digit is qubit 1 and the right digit is qubit 0. The code parses this correctly with outcome[0] for qubit 1 and outcome[1] for qubit 0.
+The explanatory note after the code addresses the obvious question: if measuring one qubit instantly determines the other, can you use this for faster-than-light communication? No, because each individual measurement is still uniformly random. Alice can't choose her outcome, so she can't encode a message. The correlation only becomes apparent when Alice and Bob compare their results afterward, which requires classical communication.
+Section 8 — Measuring in Different Bases
+This is where the notebook transitions from "entanglement is weird" to "entanglement is provably non-classical."
+Classical correlations (like two coins that were secretly set to match before being sealed in envelopes) can explain same-basis correlations perfectly. If someone secretly put matching coins in two envelopes, you'd always see them agree when you open both. That's not surprising.
+The quantum twist: the Bell state ∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩ stays correlated even when you change the measurement basis. The X-basis measurement is implemented by applying a Hadamard to both qubits before measuring (since H rotates the Z-basis into the X-basis). The histogram shows that in the X-basis, you *also* get only ∣00⟩|00\rangle
+∣00⟩ and ∣11⟩|11\rangle
+∣11⟩ (meaning both qubits agree in the X-basis too).
+
+No pre-set classical strategy can produce perfect correlations in both the Z and X bases simultaneously. If the coins were pre-set to agree in the Z-basis, they'd show random results in the X-basis. This is the intuitive version of Bell's theorem, and it's what the next section formalizes.
+Section 9 — CHSH Bell Inequality Test
+This is the quantitative hammer. The CHSH inequality is the most experimentally tested result in quantum foundations. It works like this:
+Alice and Bob each have a qubit from a Bell pair. Each randomly picks one of two measurement angles. They record their results (+1 or -1) across many rounds and compute four correlation values E(ai,bj)E(a_i, b_j)
+E(ai​,bj​) — the average product of their outcomes for each pair of settings.
+
+The S parameter combines these four correlations: S=E(a0,b0)−E(a0,b1)+E(a1,b0)+E(a1,b1)S = E(a_0,b_0) - E(a_0,b_1) + E(a_1,b_0) + E(a_1,b_1)
+S=E(a0​,b0​)−E(a0​,b1​)+E(a1​,b0​)+E(a1​,b1​).
+
+Any theory where the outcomes are predetermined by hidden variables (local realism) satisfies ∣S∣≤2|S| \leq 2
+∣S∣≤2. Quantum mechanics predicts ∣S∣=22≈2.828|S| = 2\sqrt{2} \approx 2.828
+∣S∣=22​≈2.828 for the optimal angles, which are a0=0a_0 = 0
+a0​=0, a1=π/2a_1 = \pi/2
+a1​=π/2, b0=π/4b_0 = \pi/4
+b0​=π/4, b1=−π/4b_1 = -\pi/4
+b1​=−π/4.
+
+The make_chsh_circuit() function constructs the Bell state and then applies Ry(−θ)R_y(-\theta)
+Ry​(−θ) rotations to each qubit to implement the measurement in the rotated basis. The
+compute_correlation() function maps measurement outcomes (0,1) to eigenvalues (+1,-1) and computes the expectation value.
+With 8192 shots, the result should land near 2.8, clearly exceeding the classical limit of 2. This violation isn't a loophole or a trick — it's a direct demonstration that quantum correlations are fundamentally stronger than anything achievable with classical shared randomness.
+Section 10 — Superdense Coding
+This section pivots from "why is entanglement weird" to "why is entanglement useful." Superdense coding is a protocol where Alice and Bob pre-share a Bell pair, and then Alice can send 2 classical bits of information by transmitting only 1 qubit.
+The protocol works because there are exactly four Bell states, and Alice can transform the shared ∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩ into any of the four by applying operations to *her qubit only*:
+
+
+00: do nothing (identity). State stays ∣Φ+⟩|\Phi^+\rangle
+∣Φ+⟩.
+
+01: apply X. State becomes ∣Ψ+⟩|\Psi^+\rangle
+∣Ψ+⟩.
+
+10: apply Z. State becomes ∣Φ−⟩|\Phi^-\rangle
+∣Φ−⟩.
+
+11: apply ZX. State becomes ∣Ψ−⟩|\Psi^-\rangle
+∣Ψ−⟩.
+
+
+Alice then sends her qubit to Bob. Bob now has both qubits and can perform a Bell measurement (reverse the Bell circuit: CNOT then H) to determine which of the four Bell states he has, which tells him Alice's 2-bit message. The notebook verifies all four messages decode correctly.
+This works because the four Bell states are orthogonal — they're perfectly distinguishable with the right measurement. Alice's single-qubit operations rotate through the full Bell basis, encoding 2 bits of information into the choice of Bell state.
+Section 11 — Exercises
+The exercises escalate naturally. The **GHZ state** extends entanglement to 3 qubits (12(∣000⟩+∣111⟩)\frac{1}{\sqrt{2}}(|000\rangle + |111\rangle)
+2​1​(∣000⟩+∣111⟩)), which you build with one H and two CNOTs in a chain. The **mixed-basis measurement** exercise (Z for Alice, X for Bob) is important because it shows the correlations *break* — you get all four outcomes equally, revealing that the correlations are basis-dependent, not magical omniscience. The **teleportation** exercise is the natural next notebook, using a Bell pair plus two classical bits to transfer an arbitrary quantum state.
+
+The key takeaways section at the end consolidates the seven main conceptual points, each mapping back to a specific section of the notebook. The progression from "what is entanglement" through "how to prove it" to "how to use it" mirrors how the field itself developed historically — from Einstein's philosophical objections, through Bell's mathematical framework, to the practical quantum information protocols we use today.
