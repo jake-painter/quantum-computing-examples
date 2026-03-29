@@ -13,6 +13,18 @@ Covers the most fundamental idea in quantum computing: superposition. A single H
 
 Key takeaway: measurement collapses superposition into classical outcomes. Without it, you can see the full quantum state.
 
+### 02 — Entanglement & Bell States
+
+Builds on superposition by introducing multi-qubit systems and entanglement. Walks through the CNOT gate, then combines it with a Hadamard to create all four Bell states from scratch.
+
+- **CNOT Gate** — Quantum conditional logic: flip the target only if the control is |1⟩. Demonstrated with classical inputs first, then with superposition to produce entanglement.
+- **Bell State |Φ+⟩** — (|00⟩ + |11⟩) / √2. Measurement across 102,400 shots produces only `00` and `11`, never `01` or `10`.
+- **Bloch Sphere Paradox** — Each qubit individually looks like a completely random mixed state (arrow at the origin). The information lives in the correlation, not the individual qubits.
+- **All Four Bell States** — Φ+, Φ-, Ψ+, Ψ- built and measured side by side.
+- **Multi-basis Verification** — Measures in both Z and X bases to confirm genuine entanglement, not just classical correlation.
+
+Key takeaway: entanglement links qubits so measuring one instantly determines the other. The information is in the relationship, not the parts.
+
 ## Getting Started
 
 ### Run in Colab (Recommended)
@@ -39,8 +51,7 @@ No quantum physics background required. Each notebook explains concepts from the
 
 This project is a work in progress. More notebooks will be added covering topics such as:
 
-- Entanglement and Bell states
-- Quantum gates deep dive (X, Y, Z, CNOT, Toffoli)
+- Quantum gates deep dive (X, Y, Z, phase gates, Toffoli)
 - Multi-qubit circuits
 - Quantum teleportation
 - Basic quantum algorithms (Deutsch-Jozsa, Grover's, etc.)
