@@ -1,6 +1,6 @@
 # quantum-computing-examples
 
-Hands-on notebooks exploring quantum computing concepts using [Qiskit](https://qiskit.org/) and the Aer simulator. Each notebook is self-contained, runnable in Google Colab, and built to make quantum intuitive through code and visualization.
+Hands-on jupyter notebooks exploring quantum computing concepts using [Qiskit](https://qiskit.org/) and the Aer simulator. Each notebook is self-contained, runnable in Google Colab, and built to make quantum intuitive through code and visualization.
 
 ## What's Here
 
