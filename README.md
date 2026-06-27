@@ -1,9 +1,5 @@
 # quantum-computing-examples
 
-Hands-on jupyter notebooks exploring quantum computing concepts using [Qiskit](https://qiskit.org/) and the Aer simulator. Each notebook is self-contained, runnable in Google Colab, and built to make quantum intuitive through code and visualization.
-
-## What's Here
-
 ### 01 — Superposition & Measurement
 
 Covers the most fundamental idea in quantum computing: superposition. A single Hadamard gate transforms |0⟩ into an equal superposition of |0⟩ and |1⟩, and the notebook explores what that actually means from two angles:
